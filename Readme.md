@@ -74,7 +74,7 @@ The project involved some modifications to the original structure, including gri
     chmod +x monitor_input.py
     ```
 
-7. [**Configure Spotify API Credentials:**[(https://stackoverflow.com/questions/33444733/setting-spotify-credentials-using-spotipy)
+7. [**Configure Spotify API Credentials:**](https://stackoverflow.com/questions/33444733/setting-spotify-credentials-using-spotipy)
     ```bash
     export SPOTIPY_CLIENT_ID='xxxxxxxxxxxxxxxxxxxxxxxx'
     export SPOTIPY_CLIENT_SECRET='xxxxxxxxxxxxxxxxxxxx'
