@@ -1,0 +1,11 @@
+[Unit]
+Description=Westinghouse Speaker Input service
+After=multi-user.target network.target
+[Service]
+Type=simple
+User=root
+Restart=always
+RestartSec=5
+ExecStart=/usr/bin/python /home/pi/westinghouse/monitor_input.py
+[Install]
+WantedBy=multi-user.target

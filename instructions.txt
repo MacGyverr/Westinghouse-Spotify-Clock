@@ -1,0 +1,102 @@
+Westinghouse H816L5 Clock Conversion-WIP
+
+I use a MIC ULTRA+ as an amplifier, if you don't skip that part.
+It runs Raspotify and Spotipy and an awful python program I wrote to control Spotipy. 
+It has 3 rotary encoders, 1 for track next/prev/shuffle, 1 for power/play/pause/vol, and 1 for playlist prev/next.
+
+You will need to follow the online guides for how to register your system to make API calls from Spotify.
+You will populate various config files with the keys and userIDs you get from Spotify.
+
+I'm in the process of trying to re-create instructions for someone to make one themselves.
+It has issues, I throttle the API calls to Spotify (so it doesn't crash) and this makes it have a "1 command a second" interface, this is fine for the track and playlist knobs but makes turning the volume up or down a pain. This can be adjusted or tuned in if you know python.
+
+Here is the WIP of the process, it is not complete, some may be unneed, some may have changed since I built it. It is what I remember and should at least help you find the info for each support program.
+
+I will update this as I can, but you should use the specific online links for the various support programs.
+
+#Install the packages
+sudo apt-get -y update
+sudo apt-get -y upgrade
+sudo apt-get -y install git
+sudo apt-get -y install pip
+sudo apt-get -y install espeak
+
+#I add the rotary encoders as dtoverlay devices in config.txt so that they are stable and work correctly in python.
+sudo nano /boot/config.txt
+dtoverlay=rotary-encoder,pin_a=16,pin_b=12,relative_axis=1
+dtoverlay=gpio-key,gpio=26,keycode=30,label="A"
+
+dtoverlay=rotary-encoder,pin_a=5,pin_b=6,relative_axis=1
+dtoverlay=gpio-key,gpio=13,keycode=48,label="B"
+
+dtoverlay=rotary-encoder,pin_a=22,pin_b=27,relative_axis=1
+dtoverlay=gpio-key,gpio=17,keycode=46,label="C"
+
+sudo reboot
+evtest
+
+
+#Get the audio hat drivers for the MIC ULTRA+ https://raspiaudio.com/produit/ultra
+git clone https://github.com/RASPIAUDIO/ultra2
+cd ultra2
+sudo ./install.sh
+sudo reboot
+
+#Install Raspotify (use their guide at) https://dtcooper.github.io/raspotify/
+sudo apt-get -y install curl && curl -sL https://dtcooper.github.io/raspotify/install.sh | sh
+sudo nano /etc/raspotify/conf
+#make the changes used in the included "conf" file
+
+sudo systemctl restart raspotify
+
+aplay -l
+aplay -Dhw:2 --dump-hw-params /usr/share/sounds/alsa/Front_Right.wav
+
+# I use a audio hat, if you don't or use a different one then either skip this or use your own.
+sudo nano /etc/asound.conf
+#make the changes used in the included "asound.conf" file
+speaker-test -c2 -l1
+
+#set the volumes
+alsamixer
+
+# I use Spotipy to control the stream from the 3 rotary encoders
+sudo pip install spotipy
+
+# I use ws2812 LEDs on a diffusor to light up the track/shuffle knob from behind
+sudo pip install adafruit-circuitpython-neopixel
+
+# I use espeak and pyttsx3 to speak the commands and playlist names
+sudo pip3 install pyttsx3
+
+#Here is the horrible python program I wrote to control the stream with the knobs.
+mkdir westinghouse
+cd westinghouse/
+nano monitor_input.py
+#make the changes used in the included "monitor_input.py" file
+chmod +x monitor_input.py
+
+
+#I feel like I needed to do this at some point to make Spotify work, maybe not, I'll update as needed.
+export SPOTIPY_CLIENT_ID='xxxxxxxxxxxxxxxxxxxxxxxx'
+export SPOTIPY_CLIENT_SECRET='xxxxxxxxxxxxxxxxxxxx'
+export SPOTIPY_REDIRECT_URI='http://localhost:8080/callback'
+
+
+#I do this to make the python control script start at startup and run as a service
+sudo nano /etc/systemd/system/monitor_input.py.service
+#make the changes used in the included "monitor_input.py.service" file
+
+sudo systemctl enable monitor_input.py
+sudo systemctl daemon-reload
+sudo systemctl start monitor_input.py
+sudo systemctl status monitor_input.py
+systemctl | grep running
+
+
+# I put the whole thing in "Overlay" mode when it's done, and have it reboot every night with this cron job.
+
+sudo crontab -e
+#make the following changes to have it reboot nightly (so it appears stable during the day)
+0 2 * * * /sbin/shutdown -r now
+

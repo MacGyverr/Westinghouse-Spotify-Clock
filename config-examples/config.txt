@@ -1,0 +1,8 @@
+dtoverlay=rotary-encoder,pin_a=16,pin_b=12,relative_axis=1
+dtoverlay=gpio-key,gpio=26,keycode=30,label="A"
+
+dtoverlay=rotary-encoder,pin_a=5,pin_b=6,relative_axis=1
+dtoverlay=gpio-key,gpio=13,keycode=48,label="B"
+
+dtoverlay=rotary-encoder,pin_a=22,pin_b=27,relative_axis=1
+dtoverlay=gpio-key,gpio=17,keycode=46,label="C"
