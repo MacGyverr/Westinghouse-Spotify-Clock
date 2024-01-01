@@ -1,5 +1,5 @@
 # Westinghouse H816L5 Clock Spotify Conversion
-
+![Westinghouse H816L5 Clock](https://raw.githubusercontent.com/MacGyverr/Westinghouse-Spotify-Clock/main/images/s-l500.jpg)
 ## Overview
 I replicated a Westinghouse H816L5 clock in TinkerCAD to design parts for mounting a Raspberry Pi and a modern clock, transforming it into a Spotify speaker.
 
