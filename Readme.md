@@ -46,7 +46,7 @@ The project involved some modifications to the original structure, including gri
     ```
     After editing, reboot and test with `evtest`.
 
-3. [**Install Audio Hat Drivers for MIC ULTRA+:**](https://forum.raspiaudio.com/t/ultra-installation-guide/21
+3. [**Install Audio Hat Drivers for MIC ULTRA+:**](https://forum.raspiaudio.com/t/ultra-installation-guide/21)
     ```bash
     git clone https://github.com/RASPIAUDIO/ultra2
     cd ultra2
