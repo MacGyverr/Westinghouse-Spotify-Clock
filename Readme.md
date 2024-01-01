@@ -8,14 +8,14 @@ I replicated a Westinghouse H816L5 clock in TinkerCAD to design parts for mounti
 The project involved some modifications to the original structure, including grinding down the internal lip. It uses Raspotify and Spotipy, controlled by a Python script. It features three rotary encoders for track control, power/play/pause/volume, and playlist navigation.
 
 ## Hardware Requirements
-- [Raspberry Pi 4](https://www.amazon.com/gp/product/B07TD43PDZ
+- [Raspberry Pi 4](https://www.amazon.com/gp/product/B07TD43PDZ)
 - MIC ULTRA+ (as an amplifier) [Link](https://raspiaudio.com/produit/ultra)
 - 3 [Rotary Encoders](https://www.amazon.com/gp/product/B07T3672VK)
 - [Radio Setting Clock](https://www.amazon.com/gp/product/B08CV4481V/)
 - New [4" Shielded Speaker](https://www.amazon.com/gp/product/B0002ZPSPA)
 
 ## Software
-- [Raspberry Pi OS](https://www.raspberrypi.com/software/operating-systems/
+- [Raspberry Pi OS](https://www.raspberrypi.com/software/operating-systems/)
 - [Raspotify](https://dtcooper.github.io/raspotify/)
 - [Spotipy](https://spotipy.readthedocs.io/)
 
