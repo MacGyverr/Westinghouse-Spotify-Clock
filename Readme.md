@@ -13,11 +13,16 @@ The project involved some modifications to the original structure, including gri
 - 3 [Rotary Encoders](https://www.amazon.com/gp/product/B07T3672VK)
 - [Radio Setting Clock](https://www.amazon.com/gp/product/B08CV4481V/)
 - New [4" Shielded Speaker](https://www.amazon.com/gp/product/B0002ZPSPA)
+- Rotary Encoder #1 to GPIO pins 16, 12, 26 (Clock, Data, Button)
+- Rotary Encoder #2 to GPIO pins 5, 6, 13 (Clock, Data, Button)
+- Rotary Encoder #3 to GPIO pins 22, 27, 17 (Clock, Data, Button)
+- WS2812B to GPIO pin 10 (Data for LEDs)
 
 ## Software
 - [Raspberry Pi OS](https://www.raspberrypi.com/software/operating-systems/)
 - [Raspotify](https://dtcooper.github.io/raspotify/)
 - [Spotipy](https://spotipy.readthedocs.io/)
+- [Spotify API](https://developer.spotify.com/dashboard)
 
 ## Installation and Setup
 1. **Prepare the Raspberry Pi:**
@@ -65,11 +70,11 @@ The project involved some modifications to the original structure, including gri
     mkdir westinghouse
     cd westinghouse/
     nano monitor_input.py
-    # paste the contents of the "monitor_input.py" file
+    # Paste in the contents of the "monitor_input.py" file
     chmod +x monitor_input.py
     ```
 
-7. **Configure Spotify API Credentials:**
+7. [**Configure Spotify API Credentials:**[(https://stackoverflow.com/questions/33444733/setting-spotify-credentials-using-spotipy)
     ```bash
     export SPOTIPY_CLIENT_ID='xxxxxxxxxxxxxxxxxxxxxxxx'
     export SPOTIPY_CLIENT_SECRET='xxxxxxxxxxxxxxxxxxxx'
@@ -79,7 +84,7 @@ The project involved some modifications to the original structure, including gri
 8. **Setup Python Script as a Service:**
     ```bash
     sudo nano /etc/systemd/system/monitor_input.py.service
-    # Follow instructions in "monitor_input.py.service" file
+    # Paste in the contents of the "monitor_input.py.service" file
     sudo systemctl enable monitor_input.py
     sudo systemctl daemon-reload
     sudo systemctl start monitor_input.py
