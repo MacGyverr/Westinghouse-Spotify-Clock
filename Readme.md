@@ -11,11 +11,12 @@ The project involved some modifications to the original structure, including gri
 - [Raspberry Pi 4](https://www.amazon.com/gp/product/B07TD43PDZ)
 - MIC ULTRA+ (as an amplifier) [Link](https://raspiaudio.com/produit/ultra)
 - 3 [Rotary Encoders](https://www.amazon.com/gp/product/B07T3672VK)
-- [Radio Setting Clock](https://www.amazon.com/gp/product/B08CV4481V/)
-- New [4" Shielded Speaker](https://www.amazon.com/gp/product/B0002ZPSPA)
+- [3 WS2812B LEDs](https://www.amazon.com/gp/product/B01CDTEG1O/)
 - Rotary Encoder #1 to GPIO pins 16, 12, 26 (Clock, Data, Button)
 - Rotary Encoder #2 to GPIO pins 5, 6, 13 (Clock, Data, Button)
 - Rotary Encoder #3 to GPIO pins 22, 27, 17 (Clock, Data, Button)
+- [Radio Setting Clock](https://www.amazon.com/gp/product/B08CV4481V/)
+- New [4" Shielded Speaker](https://www.amazon.com/gp/product/B0002ZPSPA)
 - WS2812B to GPIO pin 10 (Data for LEDs)
 
 ## Software
@@ -45,7 +46,7 @@ The project involved some modifications to the original structure, including gri
     ```
     After editing, reboot and test with `evtest`.
 
-3. **Install Audio Hat Drivers for MIC ULTRA+:**
+3. [**Install Audio Hat Drivers for MIC ULTRA+:**](https://forum.raspiaudio.com/t/ultra-installation-guide/21
     ```bash
     git clone https://github.com/RASPIAUDIO/ultra2
     cd ultra2
