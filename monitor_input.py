@@ -11,7 +11,13 @@ pixels = neopixel.NeoPixel(board.D10, 3)
 devices = [evdev.InputDevice(fn) for fn in evdev.list_devices()]
 devices = {dev.fd: dev for dev in devices}
 current_playlist_index = 0
+last_playlist_update = 0
+cached_playlists = []
 last_control_spotify_call = 0
+cached_volume = 0
+last_volume_update = 0
+api_calls = 0
+playlist_selection_delay = 2  # Delay in seconds
 
 # Spotify API credentials and scope
 scope = "user-modify-playback-state user-read-playback-state"
@@ -26,6 +32,7 @@ sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id="xxxxxxxxxxxxxxxxxxxxxx
 engine = pyttsx3.init()
 
 def speak(text):
+    print(f"speak: {text}")
     try:
         engine.say(text)
         engine.runAndWait()
@@ -33,10 +40,12 @@ def speak(text):
         print(f"Error in TTS: {e}")
 
 def is_active_device_available():
+    print("is_active_device_available")
     devices = get_spotify_data(lambda: sp.devices())
     return any(device['is_active'] for device in devices['devices']) if devices else False
 
 def check_spotify_connection():
+    print("check_spotify_connection")
     try:
         sp.me()  # Simple call to check if connected to Spotify
         return True
@@ -46,9 +55,12 @@ def check_spotify_connection():
         return False
 
 def get_spotify_data(func):
+    print(f"control_spotify: {func}")
+    global api_calls
     try:
         response = func()
         if response is not None:
+            api_calls = api_calls + 1
             return response
         else:
             raise Exception("Received None response from Spotify API")
@@ -58,21 +70,41 @@ def get_spotify_data(func):
         return None
 
 def control_spotify(action, **kwargs):
+    print(f"control_spotify: {action}")
     global last_control_spotify_call
+    global api_calls
     current_time = time.time()
 
     if check_spotify_connection():
         try:
             getattr(sp, action)(**kwargs)
             last_control_spotify_call = current_time  # Update the last call time after successful execution
+            api_calls = api_calls + 1
         except Exception as e:
             #speak(f"Spotify control error: {e}")
             print(f"Spotify control error: {e}")
 
-def get_user_playlists():
-    return get_spotify_data(lambda: [(playlist['name'], playlist['uri']) for playlist in sp.current_user_playlists()['items']])
+def update_playlists():
+    print("update_playlists")
+    global last_playlist_update, cached_playlists
+    current_time = time.time()
+    if current_time - last_playlist_update > 30:
+        print("actually update_playlists")
+        cached_playlists = get_spotify_data(lambda: [(playlist['name'], playlist['uri']) for playlist in sp.current_user_playlists()['items']])
+        last_playlist_update = current_time
+    return cached_playlists
 
+def update_volume():
+    global last_volume_update, cached_volume
+    current_time = time.time()
+    if current_time - last_volume_update > 30:
+        print("actually update_volume")
+        cached_volume = get_spotify_data(lambda: sp.current_playback()['device']['volume_percent'])
+        last_volume_update = current_time
+    return cached_volume
+    
 def get_active_devices():
+    print("get_active_devices")
     devices = get_spotify_data(lambda: sp.devices())
     if devices:
         for device in devices['devices']:
@@ -81,12 +113,15 @@ def get_active_devices():
     return None
 
 def is_current_player():
+    print("is_current_player")
     current_playback_info = get_spotify_data(lambda: sp.current_playback())
     if current_playback_info and current_playback_info['device']['name'] == 'Westinghouse Clock':
         return True
     return False
 
 def update_led_status():
+    print("update_led_status")
+    global api_calls
     shuffle_state = get_spotify_data(lambda: sp.current_playback()['shuffle_state'])
     is_playing = get_spotify_data(lambda: sp.current_playback()['is_playing'])
     pixels.fill((10, 10, 10))
@@ -95,13 +130,37 @@ def update_led_status():
     elif not shuffle_state and is_playing:
         pixels.fill((128, 128, 10))
     pixels.show()
+    print(f"Spotify API calls: {api_calls}")
+
+def select_playlist():
+    global current_playlist_index, last_control_spotify_call, cached_playlists
+    selection_time = time.time()
+
+    while True:
+        readable, _, _ = select.select(devices.values(), [], [], playlist_selection_delay)
+        if not readable:  # No input for the duration of the delay
+            playlist_name, playlist_uri = cached_playlists[current_playlist_index]
+            print(f"Starting playback: {playlist_name}")
+            control_spotify('start_playback', context_uri=playlist_uri)
+            break  # Exit the playlist selection loop
+
+        for device in readable:
+            for event in device.read():
+                categorized_event = evdev.util.categorize(event)
+                if isinstance(categorized_event, evdev.events.RelEvent) and device.fd == 7:
+                    step = 1 if categorized_event.event.value > 0 else -1
+                    current_playlist_index = (current_playlist_index + step) % len(cached_playlists)
+                    playlist_name, playlist_uri = cached_playlists[current_playlist_index]
+                    print(f"Selected playlist: {playlist_name}")
+                    speak(playlist_name)
+                    selection_time = time.time()
 
 def handle_event(event, fd):
-    global current_playlist_index
-    global last_control_spotify_call
+    print("handle_event")
+    global current_playlist_index, last_control_spotify_call, cached_volume
     current_time = time.time()
     # Check if we are in the cooldown period
-    if current_time - last_control_spotify_call < 1:
+    if current_time - last_control_spotify_call < 0.5:
         return  # Ignore events during cooldown
     if isinstance(event, evdev.events.RelEvent):
         if fd == 5 and event.event.value == 1:
@@ -112,21 +171,16 @@ def handle_event(event, fd):
             print("Previous Track")
         elif fd == 6:
             volume_step = 5
-            volume = get_spotify_data(lambda: sp.current_playback()['device']['volume_percent'])
+            volume = update_volume()
             new_volume = min(100, max(0, volume + volume_step * event.event.value))
             control_spotify('volume', volume_percent=new_volume)
+            cached_volume = new_volume
             print("Volume set to " + str(new_volume))
-        elif fd == 7:
+        elif fd == 7:  # playlist knob event
             if is_active_device_available():
-                playlists = get_user_playlists()
-                if playlists:
-                    step = 1 if event.event.value > 0 else -1
-                    current_playlist_index = (current_playlist_index + step) % len(playlists)
-                    playlist_name, playlist_uri = playlists[current_playlist_index]
-                    print(f"Selected playlist: {playlist_name}")
-                    speak(playlist_name)
-                    control_spotify('start_playback', context_uri=playlist_uri)
-            else:
+                update_playlists()
+                select_playlist()  # Enter the playlist selection loop
+            else: 
                 #speak("No active device found")
                 print("No active device found")
     elif isinstance(event, evdev.events.KeyEvent):
@@ -155,7 +209,7 @@ def handle_event(event, fd):
                     print("Westinghouse Clock not found or not active")
                     speak("Westinghouse Clock not found or not active")
         elif event.keycode == "KEY_C" and event.keystate == event.key_up:
-            playlists = get_user_playlists()
+            playlists = update_playlists()
             if playlists:
                 current_playlist_index = random.randint(0, len(playlists) - 1)
                 playlist_name, playlist_uri = playlists[current_playlist_index]
